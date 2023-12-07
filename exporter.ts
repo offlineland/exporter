@@ -32,6 +32,9 @@ import { ZodInfer } from "./types";
     }
 
     // #region boilerplate
+    const log = typeof consoleref !== 'undefined' ? consoleref.log : console.log;
+
+    log("loading... (this can take around 30 seconds if you're on slow internet!)")
     eval(await (await fetch("https://redom.js.org/redom.min.js", { cache: "force-cache" })).text());
     eval(await (await fetch("https://unpkg.com/zod@3.22.0/lib/index.umd.js", { cache: "force-cache" })).text());
     eval(await (await fetch("https://cdn.jsdelivr.net/npm/idb@7/build/umd.js", { cache: "force-cache" })).text());
@@ -39,10 +42,10 @@ import { ZodInfer } from "./types";
     // https://csv.js.org/stringify/api/sync/
     eval(await (await fetch("https://cdn.jsdelivr.net/npm/csv-stringify@6.4.4/dist/iife/sync.js", { cache: "force-cache" })).text());
     eval(await (await fetch("https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js", { cache: "force-cache" })).text());
-    
+    log("loading... done!")
+
     const { el, text, mount, setAttr } = redom;
     const z = Zod;
-    const log = typeof consoleref !== 'undefined' ? consoleref.log : console.log;
 
     const csrfToken = document.cookie.match("(^|;)\\s*" + "act" + "\\s*=\\s*([^;]+)")?.pop();
     if (!csrfToken) {
