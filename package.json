@@ -2,6 +2,9 @@
   "name": "cleaningthingy",
   "module": "exporter.js",
   "type": "module",
+  "scripts": {
+    "build": "tsc"
+  },
   "devDependencies": {
     "bun-types": "latest"
   },
