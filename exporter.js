@@ -222,59 +222,92 @@
     const btn_miftsEnabled = el("input", { type: "checkbox", checked: true });
     const btn_queueEnabled = el("input", { type: "checkbox", checked: false });
     const btn_start = el("button.okButton", ["Start exporter"]);
-    const root = el("div.contentPart", [
-        el("div", { style: "padding-bottom: 2em;" }, [
-            el("h1", "offlineland.io's exporter thingy"),
-            el("div", "Note: it'll pick back where it left off, you can reload at any time to stop it"),
-        ]),
-        el("div", { style: "font-family: initial; font-size: initial; text-transform: initial; background-color: rgb(208,188,178); color: black; border-radius: 5px; padding: 30px;" }, [
-            el("div", [
-                el("ul", [
-                    el("li", [
-                        el("label", [btn_snapsEnabled, "Update the snap album"]),
-                        progressSnaps.isDone ? " (Done! Page: " : " (At page: ", status_atPageSnaps, ") ",
-                        btn_resetSnapAlbumProgress,
-                    ]),
-                    el("li", [
-                        el("label", [btn_creationsEnabled, "Update the creations tab"]),
-                        progressCreations.isDone ? " (Done! Page: " : " (At page: ", status_atPageCreations, ") ",
-                        btn_resetCreationsProgress,
-                    ]),
-                    el("li", [
-                        el("label", [btn_collectionsEnabled, "Update the collections tab"]),
-                        progressCollections.isDone ? " (Done! Page: " : " (At page: ", status_atPageCollections, ") ",
-                        btn_resetCollectionsProgress,
-                    ]),
-                    el("li", el("label", [btn_binEnabled, "Creations in bin (search tab)", progressCollections.isDone ? "Done!" : ""])),
-                    el("li", el("label", [btn_miftsEnabled, "Update mifts"])),
-                    el("li", el("label", [btn_queueEnabled, "Things in multis, holders, and body motions (this can take a very long time!)"])),
-                ])
-            ]),
-            el("div", { style: "padding: 1em; text-align: center;" }, [
-                btn_start,
-            ]),
-            el("div", { style: "padding-top: 1em;" }, [
-                el("p.text-left", ["status:", status]),
-                el("ul", [
-                    el("li", ["Snaps: ", status_totalSnapsFound.el]),
-                    el("li", ["Mifts (public): ", status_currentMiftsPublicSaved.el]),
-                    el("li", ["Mifts (private): ", status_currentMiftsPrivateSaved.el]),
-                    el("li", ["Inventory (creations): ", status_totalCreationsFound.el]),
-                    el("li", ["Inventory (collects): ", status_totalCollectionsFound.el, " (skipped public creations: ", status_totalPublicCollectionsFound.el, " )"]),
-                    el("li", ["Total saved items: ", status_totalSavedCreations.el]),
-                    el("li", ["Remaining items in multis/holders/bodies to download: ", status_creationsInQueue.el]),
+    class App {
+        el;
+        deleteAllDataBtn;
+        constructor() {
+            this.el = el("div.contentPart", [
+                el("div", { style: "padding-bottom: 2em;" }, [
+                    el("h1", "offlineland.io's exporter thingy"),
+                    el("div", "Note: it'll pick back where it left off, you can reload at any time to stop it"),
                 ]),
-            ]),
-            el("div", { style: "padding-top: 2em; font-size: 12px;" }, [
-                el("p", { style: "margin-bottom: 0px" }, [
-                    "Note: this can take a while! To speed up things, collected public creations (those in the universe search) are not downloaded. They'll appear in your inventory on offlineland.io though!"
-                ]),
-                el("p", { style: "margin-top: 0px" }, [
-                    "(version: ", version, ")"
+                el("div", { style: "font-family: initial; font-size: initial; text-transform: initial; background-color: rgb(208,188,178); color: black; border-radius: 5px; padding: 30px;" }, [
+                    el("div", [
+                        el("ul", [
+                            el("li", [
+                                el("label", [btn_snapsEnabled, "Update the snap album"]),
+                                progressSnaps.isDone ? " (Done! Page: " : " (At page: ", status_atPageSnaps, ") ",
+                                btn_resetSnapAlbumProgress,
+                            ]),
+                            el("li", [
+                                el("label", [btn_creationsEnabled, "Update the creations tab"]),
+                                progressCreations.isDone ? " (Done! Page: " : " (At page: ", status_atPageCreations, ") ",
+                                btn_resetCreationsProgress,
+                            ]),
+                            el("li", [
+                                el("label", [btn_collectionsEnabled, "Update the collections tab"]),
+                                progressCollections.isDone ? " (Done! Page: " : " (At page: ", status_atPageCollections, ") ",
+                                btn_resetCollectionsProgress,
+                            ]),
+                            el("li", el("label", [btn_binEnabled, "Creations in bin (search tab)", progressCollections.isDone ? "Done!" : ""])),
+                            el("li", el("label", [btn_miftsEnabled, "Update mifts"])),
+                            el("li", el("label", [btn_queueEnabled, "Things in multis, holders, and body motions (this can take a very long time!)"])),
+                        ])
+                    ]),
+                    el("div", { style: "padding: 1em; text-align: center;" }, [
+                        btn_start,
+                    ]),
+                    el("div", { style: "padding-top: 1em;" }, [
+                        el("p.text-left", ["status:", status]),
+                        el("ul", [
+                            el("li", ["Snaps: ", status_totalSnapsFound.el]),
+                            el("li", ["Mifts (public): ", status_currentMiftsPublicSaved.el]),
+                            el("li", ["Mifts (private): ", status_currentMiftsPrivateSaved.el]),
+                            el("li", ["Inventory (creations): ", status_totalCreationsFound.el]),
+                            el("li", ["Inventory (collects): ", status_totalCollectionsFound.el, " (skipped public creations: ", status_totalPublicCollectionsFound.el, " )"]),
+                            el("li", ["Total saved items: ", status_totalSavedCreations.el]),
+                            el("li", ["Remaining items in multis/holders/bodies to download: ", status_creationsInQueue.el]),
+                        ]),
+                    ]),
+                    el("div", { style: "padding-top: 2em; font-size: 12px;" }, [
+                        el("p", { style: "margin-bottom: 0px" }, [
+                            "Note: this can take a while! To speed up things, collected public creations (those in the universe search) are not downloaded. They'll appear in your inventory on offlineland.io though!"
+                        ]),
+                        el("p", { style: "margin-top: 0px" }, [
+                            "(version: ", version, ")",
+                            this.deleteAllDataBtn = el("button", {
+                                onclick: async () => {
+                                    for (const store of db.objectStoreNames) {
+                                        console.log("clearing store", store);
+                                        await db.clear(store);
+                                    }
+                                    status_atPageCollections.update(() => 0);
+                                    status_atPageCreations.update(() => 0);
+                                    status_atPageSnaps.update(() => 0);
+                                    status_creationsInQueue.update(() => 0);
+                                    status_currentMiftsPrivateSaved.update(() => 0);
+                                    status_currentMiftsPublicSaved.update(() => 0);
+                                    status_currentPageCollections.update(() => 0);
+                                    status_totalCollectionsFound.update(() => 0);
+                                    status_totalPageCollections.update(() => 0);
+                                    status_totalPublicCollectionsFound.update(() => 0);
+                                    status_totalSavedCreations.update(() => 0);
+                                    status_totalCreationsFound.update(() => 0);
+                                    status_totalPagesCreations.update(() => 0);
+                                    status_totalSnapsFound.update(() => 0);
+                                    setAttr(btn_snapsEnabled, { checked: true });
+                                    setAttr(btn_creationsEnabled, { checked: true });
+                                    setAttr(btn_collectionsEnabled, { checked: true });
+                                    alert("All exporter data has been cleared!");
+                                }
+                            }, "DEBUG: Delete all stored data")
+                        ])
+                    ])
                 ])
-            ])
-        ])
-    ]);
+            ]);
+        }
+    }
+    const root = new App();
     const isInfoRiftPage = document.querySelector('.intermission') != undefined;
     if (isInfoRiftPage) {
         const _root = el("div#exporter-root.content", root, { style: { width: "unset", top: "0px", "text-align": "initial", display: "flex", "justify-content": "space-around" } });
@@ -871,6 +904,7 @@
     // #endregion zip
     const runExporter = async () => {
         setAttr(btn_start, { disabled: true });
+        setAttr(root.deleteAllDataBtn, { disabled: true });
         try {
             log("starting! version:", version);
             status.textContent = "Archiving profile...";
@@ -923,6 +957,7 @@
         }
         //db.close();
         setAttr(btn_start, { disabled: false });
+        setAttr(root.deleteAllDataBtn, { disabled: false });
     };
     btn_start.onclick = runExporter;
     document.addEventListener("error", (e) => {
