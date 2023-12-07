@@ -658,7 +658,10 @@
             }
             if (page.results.length < 5)
                 break;
-            lastDate = page.results.at(-1).ts;
+            const lastPage = page.results.at(-1);
+            if (!lastPage)
+                break;
+            lastDate = lastPage.ts;
             await sleep(SLEEP_MIFT_PAGE);
         }
     };
@@ -685,7 +688,7 @@
         let index = startIndex;
         while (true) {
             const rawData = await getSnap(index++);
-            const result = schema_snap.safeParse(rawData);
+            const result = schema_snapPage.safeParse(rawData);
             log(rawData, result);
             if (result.success === false) {
                 log("unable to parse snap data", { index, error: result.error, rawData });
@@ -933,4 +936,3 @@
         status.textContent += "Unexpected error! Retry later or post on the offlineland board!";
     });
 })();
-export {};
