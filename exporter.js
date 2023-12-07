@@ -16,6 +16,7 @@
     if (!window.console) {
         alert("You might have an ablocker that will break things! If you see an error, try disabling it (or switch to ublock origin, that one seems to work fine)")
         // add stubs anyway
+        // @ts-ignore
         window.console = {
             log: () => {},
             info: () => {},

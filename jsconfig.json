@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+        "strict": false,
+        "target": "ESNext",
+        "lib": [ "ESNext", "dom" ],
+        "moduleResolution": "nodenext",
+        "module": "nodenext",
+        "checkJs": true,
+        "noEmit": true,
+        "skipLibCheck": true
+    },
+    "include": [
+        "exporter.js",
+        "globals.d.ts"
+    ],
+    "exclude": [
+        "node_modules/**/*"
+    ]
+}
