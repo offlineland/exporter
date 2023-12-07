@@ -1,0 +1,1 @@
+export type { infer as ZodInfer } from "zod/lib/types";

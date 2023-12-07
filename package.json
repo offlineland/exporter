@@ -3,7 +3,7 @@
   "module": "exporter.js",
   "type": "module",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc ; sed -i '1,2d' exporter.js"
   },
   "devDependencies": {
     "bun-types": "latest"

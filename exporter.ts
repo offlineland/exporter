@@ -1,3 +1,5 @@
+import { ZodInfer } from "./types";
+
 (async () => {
     const version = "5";
 
@@ -106,6 +108,7 @@
 
 
     log("creating db")
+    // TODO
     interface dbSchema extends DBSchema {
         "misc-data": { key: string, value: any }
     }
@@ -752,7 +755,8 @@
         "deliverySeenByRecipient": z.boolean(),
         "ts": z.string(),
     })
-    type Mift = typeof z.infer<typeof schema_mift>
+
+    type Mift = ZodInfer<typeof schema_mift>
 
     const store_addMift = async (mift: Mift, priv: boolean) => await db.put(priv ? 'mifts-private' : 'mifts-public', mift, mift._id);
     const store_getMift  = async (miftId: string, priv: boolean) => await db.get(priv ? 'mifts-private' : 'mifts-public', miftId);
@@ -793,7 +797,9 @@
             }
 
             if (page.results.length < 5) break;
-            lastDate = page.results.at(-1).ts;
+            const lastPage = page.results.at(-1);
+            if (!lastPage) break;
+            lastDate = lastPage.ts;
             await sleep(SLEEP_MIFT_PAGE);
         }
     }
@@ -808,7 +814,7 @@
             shortCode: z.string(),
             loc: z.object({ p: z.coerce.number(), a: z.coerce.string(), x: z.coerce.number(), y: z.coerce.number() })
         });
-    type Snap = typeof z.infer<typeof schema_snap>
+    type Snap = ZodInfer<typeof schema_snap>
     const schema_snapPage = z.object({
         visitedLocation: schema_snap.optional(),
         moreResults: z.boolean()
@@ -825,7 +831,7 @@
 
         while (true) {
             const rawData = await getSnap(index++);
-            const result = schema_snap.safeParse(rawData);
+            const result = schema_snapPage.safeParse(rawData);
 
             log(rawData, result)
             if (result.success === false) {

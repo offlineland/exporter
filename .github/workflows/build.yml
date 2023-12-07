@@ -23,6 +23,6 @@ jobs:
       run: |
         git config user.name "Github Actions"
         git config user.email "actions@users.noreply.github.com"
-        git add -f --all
+        git add -f ./exporter.js
         git commit -m "Build files"
         git push

@@ -3,14 +3,19 @@
         "strict": true,
         "target": "ESNext",
         "lib": [ "ESNext", "dom" ],
-        "moduleResolution": "nodenext",
-        "module": "nodenext",
+        "module": "None",
+        "moduleResolution": "Classic",
+        "isolatedModules": true,
+        "paths": {
+            "*": ["./node_modules/*"],
+        },
         "checkJs": true,
         "noEmit": false,
         "skipLibCheck": true
     },
     "include": [
         "exporter.ts",
+        "types.ts",
         "globals.d.ts"
     ],
     "exclude": [
