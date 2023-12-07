@@ -3,7 +3,8 @@
   "module": "exporter.js",
   "type": "module",
   "scripts": {
-    "build": "tsc ; sed -i '1,2d' exporter.js"
+    "build": "tsc ; sed -i '1,2d' exporter.js",
+    "dev": "tsc --watch"
   },
   "devDependencies": {
     "bun-types": "latest"
