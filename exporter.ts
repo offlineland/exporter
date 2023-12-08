@@ -682,8 +682,8 @@ import { ZodInfer } from "./types";
             for (const item of items) {
                 if ((await store_hasCollectedId(item)) === false) {
                     status_totalCollectionsFound.update(v => v + 1);
-                    await store_addCollectedId(item);
                 }
+                await store_addCollectedId(item);
             }
 
             const reachedEnd = end >= itemCount;
@@ -731,8 +731,8 @@ import { ZodInfer } from "./types";
             for (const item of items) {
                 if ((await store_hasCreatedId(item)) === false) {
                     status_totalCreationsFound.update(v => v + 1);
-                    await store_addCreatedId(item);
                 }
+                await store_addCreatedId(item);
             }
 
             const reachedEnd = end >= itemCount;
