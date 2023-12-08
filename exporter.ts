@@ -182,7 +182,15 @@ import { ZodInfer } from "./types";
             status.textContent = prevStatusText +  ` (checking public creations ${prefix}...)`;
 
             console.time(`Downloading creation Ids ${prefix}`)
-            const ids: string[] = await fetch(`https://offlineland.io/static/offlineland/public-creations/by-prefix/${PREFIX_LENGTH}/${prefix}.json`).then(res => res.json())
+            const ids: string[] = await fetch(`https://offlineland.io/static/offlineland/public-creations/by-prefix/${PREFIX_LENGTH}/${prefix}.json`)
+            .then(res => {
+                if (res.ok) return res.json();
+                else throw new Error(`Request error ${res.status} ${res.statusText}.`)
+            })
+            .catch(e => {
+                console.warn("Error while downloading the list public creations! Skipping...", e)
+                return [];
+            })
             console.timeEnd(`Downloading creation Ids ${prefix}`)
 
 
