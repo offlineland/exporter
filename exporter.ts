@@ -507,7 +507,7 @@ import { ZodInfer } from "./types";
                 return;
             }
 
-            const def = await retryOnThrow(() => res.json()).catch(e => {
+            const def = await res.json().catch(e => {
                 console.warn("Unable to read creation data! It's likely the server sent us an HTML error instead. Is manyland down? In the meantime, I'm going to stop here.", e, creationId)
                 status.textContent += ` Unable to read creation data! Is manyland online? Retry later!`
 
