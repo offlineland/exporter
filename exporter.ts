@@ -492,28 +492,26 @@ import { ZodInfer } from "./types";
         status_creationsInQueue.update(v => v + 1);
         await db.put("creations-queue", null, creationId);
     }
+    
+    // Wraps the real function in a try/catch block to keep the control flow simple
     const saveCreation = async (creationId: string) => {
+        try {
+            return await saveCreation_(creationId)
+        } catch(e) {
+            console.warn(`Error while downloading creation ${creationId}! Skipping, please re-run the exporter to retry downloading it!`)
+        }
+    }
+    const saveCreation_ = async (creationId: string) => {
         if ((await store_getCreationDef(creationId)) == undefined) {
-            const res = await retryOnThrow(() => fetch(`https://d2h9in11vauk68.cloudfront.net/${creationId}`)).catch(e => {
-                console.warn(`Network error while downloading creation data ${creationId}! Check that you're online. In the meantime, I'm going to stop here.`);
-                status.textContent += ` Network error! Are you online? Retry later!`
-
-                e._offlineland_handled = true;
-                throw e;
-            });
+            const res = await retryOnThrow(() => fetch(`https://d2h9in11vauk68.cloudfront.net/${creationId}`))
+            // NOTE: 404 errors will make `fetch` throw because the server doesn't set the proper CORS headers on 404s, and CORS errors are "Network errors"
 
             if (!res.ok) {
-                console.warn(`error downloading creation data ${creationId}! Server says: ${res.status} ${res.statusText}. I'm going to skip this creation; if you want to retry it later, just re-run the exporter.`)
+                console.warn(`Error downloading creation data ${creationId}! Server says: ${res.status} ${res.statusText}. Skipping, please re-run the exporter to retry downloading it!`)
                 return;
             }
 
-            const def = await res.json().catch(e => {
-                console.warn("Unable to read creation data! It's likely the server sent us an HTML error instead. Is manyland down? In the meantime, I'm going to stop here.", e, creationId)
-                status.textContent += ` Unable to read creation data! Is manyland online? Retry later!`
-
-                e._offlineland_handled = true;
-                throw e;
-            });
+            const def = await res.json()
 
             if (def.base === "HOLDER" && (await store_getHolderContent(creationId)) == undefined) {
                 log(`Creation "${def.name}" is a holder, fetching content`);
