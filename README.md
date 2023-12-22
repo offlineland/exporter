@@ -6,30 +6,33 @@
 
 ## For developers:
 
-The actual work is done on the `exporter.ts` file. To set up a dev env:
+The actual work is done on the `exporter.ts` file (`.ts` instead of `.js`) because I can't live without types. To set up a dev env:
 
-- install Bun ([Bun](https://bun.sh)):
 - install dependencies:
 ```bash
-bun install
+bun install # or yarn, or npm....
 ```
 -  run the compiler in watch mode:
 ```bash
 bun run dev
 ```
 
-When copy-pasting the built exporter.js, you'll need to be careful not to copy the first two lines:
+While developing, when copy-pasting the built exporter.js you'll need to be careful not to copy the first two lines:
 ```js
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 ```
-Typescript really really wants to include them and has no option not to, but it doesn't work in browser.
+Typescript really really wants to include them (because exporter.ts is considered a "module" because we use `import type ...` in it, even though that syntax is erased at compile time) and has no option to control that behavior, but they make the browser throw an error.
 
-(If you manage to have tsc pick up the type for Zod.infer without using the `import/export type ...` syntax, you're a god please help me)
+(You only need to care about it when developping locally, the CI takes care of removing it on the `.js` file in the repo)
+
+(If you manage to have tsc pick up the type for Zod.infer without using the `import/export type ...` syntax you're a god please help me)
 
 
 ### What is Bun?
 [Bun](https://bun.sh) is a "fast all-in-one JavaScript runtime". It's basically Node.js or Deno, except faster and way more convenient and has everything built-in
+
+You should be able to replace `bun` above with `yarn` or `npm`, but I use `bun` for convenience in all the offlineland repos.
 
 ### What is Zod?
 [Zod](https://zod.dev/) is a powerful parsing + validation library; ideally I'd use it to validate all incoming data, but manyland's api is so full of holes and exceptions that I don't want to have it fail mid-way, so the exporter is mostly archiving everything as-is.
