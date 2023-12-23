@@ -16,9 +16,13 @@ You can find more detailed informations [here](https://offlineland.io/exporter).
 
 The goal of this exporter is to save _private_ data off of Manyland into a self-contained format (usable as-is for people to dig through all of their manyland content). Files should be human-readable and incidentally machine-readable (eg. the exported data can also be re-imported in [Offlineland](https://offlineland.io) by programatically reading the .zip file's content).
 
-Exporting should not hammer the manyland servers. Especially, be careful about:
-- throttling the API calls (use `sleep`)
-- avoid downloading public data (that is unrelated to the user) as it's all in the archives already
+Design goals:
+- Don't hammer the Manyland servers:
+    - Throttle the API calls (use `sleep` with appropriate times)
+    - Avoid downloading public data (that is unrelated to the user) as it's all in the archives already
+- Preserve user privacy:
+    - All data must come from Manyland, stored on-device, and not sent anywhere. Ideally, don't ever make HTTP requests that aren't outbound to Manyland or a CDN - and when you do, only query public data. "Public" data is understood as being placed in a public area area or available from universe search.
+    - Don't store other players' private or personal data - this mostly applies to boardposts. For more on the rationale, see the [Responsible use](https://github.com/offlineland/manyland-archive#responsible-use) section of the Archives repository.
 
 The actual work is done on the `exporter.ts` file (`.ts` instead of `.js`) because I can't live without types. To set up a dev env:
 
