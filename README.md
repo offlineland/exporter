@@ -14,8 +14,11 @@ You can find more detailed informations [here](https://offlineland.io/exporter).
 
 ## For developers:
 
-The goal of this exporter is to save _private_ data off of Manyland into a self-contained format (usable as-is for people to dig through all of their manyland content). The exported data can also be re-imported in [Offlineland](https://offlineland.io).
-Exporting should not hammer the manyland servers: throttle the downloads, and avoid downloading public data (that is unrelated to the user) as it's all in the archives already.
+The goal of this exporter is to save _private_ data off of Manyland into a self-contained format (usable as-is for people to dig through all of their manyland content). Files should be human-readable and incidentally machine-readable (eg. the exported data can also be re-imported in [Offlineland](https://offlineland.io) by programatically reading the .zip file's content).
+
+Exporting should not hammer the manyland servers. Especially, be careful about:
+- throttling the API calls (use `sleep`)
+- avoid downloading public data (that is unrelated to the user) as it's all in the archives already
 
 The actual work is done on the `exporter.ts` file (`.ts` instead of `.js`) because I can't live without types. To set up a dev env:
 
