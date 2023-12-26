@@ -118,8 +118,8 @@ import { ZodInfer } from "./types";
 
     type dbSchema_ = Awaited<ReturnType<typeof idb.openDB<dbSchema>>>;
 
-    const db = await idb.openDB<dbSchema_>("mlexporter", 2, {
-        upgrade(db, oldVersion, newVersion) {
+    const db = await idb.openDB<dbSchema_>("mlexporter", 3, {
+        upgrade(db, oldVersion, newVersion, tx) {
             console.log("upgrading db from", oldVersion, "to", newVersion);
 
             if (oldVersion < 1) {
@@ -147,6 +147,10 @@ import { ZodInfer } from "./types";
             if (oldVersion < 2) {
                 db.createObjectStore('public-creations-downloaded-prefixes');
                 db.createObjectStore('public-creations');
+            }
+            if (oldVersion < 3) {
+                log("clearing saved creation data")
+                tx.objectStore('creations-data-def').clear()
             }
         }
     });
