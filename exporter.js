@@ -1,5 +1,5 @@
 (async () => {
-    const version = "7";
+    const version = "8";
     if (window.location.protocol === "http:") {
         if (confirm("Redirecting to secure context...")) {
             window.location.href = `https://${window.location.host}${window.location.pathname}${window.location.search}${window.location.hash}`;
@@ -92,8 +92,8 @@
         return [set, get];
     };
     log("creating db");
-    const db = await idb.openDB("mlexporter", 2, {
-        upgrade(db, oldVersion, newVersion) {
+    const db = await idb.openDB("mlexporter", 3, {
+        upgrade(db, oldVersion, newVersion, tx) {
             console.log("upgrading db from", oldVersion, "to", newVersion);
             if (oldVersion < 1) {
                 db.createObjectStore('misc-data');
@@ -115,6 +115,10 @@
             if (oldVersion < 2) {
                 db.createObjectStore('public-creations-downloaded-prefixes');
                 db.createObjectStore('public-creations');
+            }
+            if (oldVersion < 3) {
+                log("clearing saved creation data");
+                tx.objectStore('creations-data-def').clear();
             }
         }
     });
@@ -450,28 +454,33 @@
                 await sleep(SLEEP_CREATIONDL_API_SUBCONTENT);
                 log(`Creation "${def.name}" is a body, fetching motion bar done`);
             }
+            else if (def.base === "POINTER" && typeof def.prop?.url === "string" && def.prop.url.length === 10) {
+                log(`Creation "${def.name}" is a pointer, fetching associated location`);
+                await saveSnapByShortcode(def.prop.url);
+                log(`Creation "${def.name}" is a pointer, fetching associated location done`);
+            }
             // TODO: not all boards have settings. Is it really even useful to store this?
             //else if (def.base === "WRITABLE") {
             //    const data = api_getWritableSettings(def.id)
             //}
             // get from props
-            if (def.props?.emitsId)
-                await store_addToQueue(def.props.emitsId);
-            if (def.props?.motionId)
-                await store_addToQueue(def.props.motionId);
-            if (def.props?.environmentId)
-                await store_addToQueue(def.props.environmentId);
-            if (def.props?.getId)
-                await store_addToQueue(def.props.getId);
-            if (def.props?.hasId)
-                await store_addToQueue(def.props.hasId);
-            if (def.props?.holdableId)
-                await store_addToQueue(def.props.holdableId);
-            if (def.props?.wearableId)
-                await store_addToQueue(def.props.wearableId);
-            if (def.props?.thingRefs) {
-                if (Array.isArray(def.props.thingRefs)) {
-                    for (const [id] of def.props.thingRefs) {
+            if (def.prop?.emitsId)
+                await store_addToQueue(def.prop.emitsId);
+            if (def.prop?.motionId)
+                await store_addToQueue(def.prop.motionId);
+            if (def.prop?.environmentId)
+                await store_addToQueue(def.prop.environmentId);
+            if (def.prop?.getId)
+                await store_addToQueue(def.prop.getId);
+            if (def.prop?.hasId)
+                await store_addToQueue(def.prop.hasId);
+            if (def.prop?.holdableId)
+                await store_addToQueue(def.prop.holdableId);
+            if (def.prop?.wearableId)
+                await store_addToQueue(def.prop.wearableId);
+            if (def.prop?.thingRefs) {
+                if (Array.isArray(def.prop.thingRefs)) {
+                    for (const [id] of def.prop.thingRefs) {
                         await store_addToQueue(id);
                     }
                 }
@@ -713,11 +722,12 @@
     // #endregion mifts
     // SNAPSHOTS
     // #region snaps
+    const schema_snap_loc = z.object({ p: z.coerce.number(), a: z.coerce.string(), x: z.coerce.number(), y: z.coerce.number() });
     const schema_snap = z.object({
         _id: z.string(),
         isPrivate: z.boolean().optional(),
         shortCode: z.string(),
-        loc: z.object({ p: z.coerce.number(), a: z.coerce.string(), x: z.coerce.number(), y: z.coerce.number() })
+        loc: schema_snap_loc,
     });
     const schema_snapPage = z.object({
         visitedLocation: schema_snap.optional(),
@@ -729,6 +739,7 @@
     const storeSnapImage = async (shortCode, blob) => await db.put('snapshots-image', blob, shortCode);
     const getSnapImage = async (shortCode) => await db.get('snapshots-image', shortCode);
     const getSnap = async (index) => await (await fetch(`https://manyland.com/j/v/loc/${index}`, { credentials: "include", mode: "cors", headers: { "X-CSRF": csrfToken } })).json();
+    const api_getSnapFromCode = async (shortCode) => await api_getJSON(`https://manyland.com/j/v/cds/${shortCode}`);
     const scanSnaps = async (startIndex = 0) => {
         let index = startIndex;
         while (true) {
@@ -780,6 +791,21 @@
             await downloadAndStoreSnap(shortCode);
         }
     };
+    const saveSnapByShortcode = async (shortCode) => {
+        try {
+            const rawData = await api_getSnapFromCode(shortCode);
+            const data = schema_snap_loc.parse(rawData);
+            await storeSnapData({
+                _id: "5272e0f00000000000001919",
+                shortCode,
+                loc: data,
+                isPrivate: true,
+            });
+        }
+        catch (e) {
+            console.warn(`Error saving snap ${shortCode}!`);
+        }
+    };
     // #endregion snaps
     const makeNameSafeForFile = (str) => str.replace(/[^a-z0-9. -]+/gi, '_');
     const makeDateSafeForFile = (str) => str.replace(/:/g, '.').slice(0, 19) + 'Z';
@@ -791,6 +817,7 @@
         const zip = new JSZip();
         // #region zip_profile
         {
+            status.textContent = "Creating zip... (adding account data)";
             zip.file(`profile_own-id.json`, JSON.stringify(ourId, null, 2));
             if (initData.stn) {
                 zip.file(`profile_settings.json`, JSON.stringify(initData.stn, null, 2));
@@ -809,6 +836,7 @@
         const snapCsvDataset = [["shortCode", "date", "areaId", "areaPlane", "x", "y", "isPrivate", "_id"]];
         for (const shortCode of allSnaps) {
             log("adding snap", shortCode);
+            status.textContent = `Creating zip... (adding snap ${shortCode})`;
             const data = await getSnapData(shortCode);
             const imageBlob = await getSnapImage(shortCode);
             const takenAtDate = dateFromObjectId(data._id).toISOString();
@@ -819,6 +847,7 @@
             snapCsvDataset.push([data.shortCode, takenAtDate, data.loc?.a, data.loc?.p, data.loc?.x, data.loc?.y, data.isPrivate ? "true" : "false", data._id]);
         }
         zip.file(`snapshots/filename_mapping.json`, JSON.stringify(snapFilenames, null, 2));
+        status.textContent = `Creating zip... (adding snapshots.csv)`;
         zip.file(`snapshots.csv`, csv_stringify_sync.stringify(snapCsvDataset));
         // #endregion zip_snaps
         // #region zip_mifts
@@ -826,6 +855,7 @@
         const csvDataset_mifts = [["date", "from", "text", "isPrivate", "fromId", "toId", "_id"]];
         const allPublicMifts = await store_getAllMifts(false);
         for (const mift of allPublicMifts) {
+            status.textContent = `Creating zip... (adding mift ${mift._id})`;
             const filename = makeNameSafeForFile(`${makeDateSafeForFile(mift.ts)} - from ${mift.fromName} - ${mift.text.slice(0, 60)}`);
             zip.file(`mifts/public/${filename}.json`, JSON.stringify(mift, null, 2));
             zip.file(`mifts/public/${filename}.png`, store_getCreationImage(mift.itemId));
@@ -834,11 +864,13 @@
         log("adding private mifts");
         const allPrivateMifts = await store_getAllMifts(true);
         for (const mift of allPrivateMifts) {
+            status.textContent = `Creating zip... (adding mift ${mift._id})`;
             const filename = makeNameSafeForFile(`${makeDateSafeForFile(mift.ts)} - from ${mift.fromName} - ${mift.text.slice(0, 60)}`);
             zip.file(`mifts/private/${filename}.json`, JSON.stringify(mift, null, 2));
             zip.file(`mifts/private/${filename}.png`, store_getCreationImage(mift.itemId));
             csvDataset_mifts.push([mift.ts, mift.fromName, mift.text, "true", mift.fromId, mift.toId, mift._id]);
         }
+        status.textContent = `Creating zip... (adding mifts.csv)`;
         zip.file(`mifts.csv`, csv_stringify_sync.stringify(csvDataset_mifts));
         // #endregion zip_mifts
         // #region zip_creations
@@ -847,7 +879,9 @@
             // NOTE: If a creation somehow had it's image and stats downloaded, but no def, it won't appear.
             //       This shouldn't happen, though, and I'm not sure how we'd recover from that anyway.
             const allKeys = await db.getAllKeys('creations-data-def');
-            for await (const id of allKeys) {
+            for (let i = 0; i < allKeys.length; i++) {
+                const id = allKeys[i];
+                status.textContent = `Creating zip... (adding creation ${i}/${allKeys.length})`;
                 const def = await store_getCreationDef(id);
                 const img = await store_getCreationImage(id);
                 const date = dateFromObjectId(id).toISOString();
@@ -879,14 +913,17 @@
                 }
             }
             // NOTE: we only store CSV data for our own creations
+            status.textContent = `Creating zip... (adding my-creations.csv)`;
             zip.file(`my-creations.csv`, csv_stringify_sync.stringify(csvDataset));
         }
         // #endregion zip_creations
+        status.textContent = `Creating zip... (adding inventory data)`;
         zip.file(`inventory-collected.json`, JSON.stringify(await db.getAllKeys(`inventory-collections`), null, 2));
         zip.file(`inventory-created.json`, JSON.stringify(await db.getAllKeys(`inventory-creations`), null, 2));
         // #region zip_arealist
         {
             log("storing area list...");
+            status.textContent = `Creating zip... (adding area list)`;
             const areaList = await api_getMyAreaList();
             const csvDataset = [["groupId", "id", "areaName", "name", "isSubarea", "isCreator", "isEditor", "totalVisitors", "lastVisit"]];
             let backupLinks = "";
@@ -908,6 +945,7 @@
         }
         // #endregion zip_arealist
         log("generating file...");
+        status.textContent = `Creating zip... (generating file, this can take a while!)`;
         const zipBlob = await zip.generateAsync({ type: "blob" });
         log("downloading file...");
         saveAs(zipBlob, "manyland-account-archive.zip");
@@ -928,6 +966,10 @@
                 status.textContent = "Downloading snaps...";
             }
             await downloadAllStoredSnaps();
+            const extraSnaps = [];
+            for (const snap of extraSnaps) {
+                await saveSnapByShortcode(snap);
+            }
             if (btn_miftsEnabled.checked) {
                 status.textContent = "Archiving public mifts...";
                 await api_scanAllMifts(ourId, false);
