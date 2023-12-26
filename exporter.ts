@@ -553,6 +553,12 @@ import { ZodInfer } from "./types";
                 await sleep(SLEEP_CREATIONDL_API_SUBCONTENT);
                 log(`Creation "${def.name}" is a body, fetching motion bar done`);
             }
+            else if (def.base === "POINTER" && typeof def.prop?.url === "string" && def.prop.url.length === 10) {
+                log(`Creation "${def.name}" is a pointer, fetching associated location`);
+                await saveSnapByShortcode(def.prop.url)
+                log(`Creation "${def.name}" is a pointer, fetching associated location done`);
+
+            }
             // TODO: not all boards have settings. Is it really even useful to store this?
             //else if (def.base === "WRITABLE") {
             //    const data = api_getWritableSettings(def.id)
@@ -853,11 +859,12 @@ import { ZodInfer } from "./types";
 
     // SNAPSHOTS
     // #region snaps
+    const schema_snap_loc = z.object({ p: z.coerce.number(), a: z.coerce.string(), x: z.coerce.number(), y: z.coerce.number() });
     const schema_snap = z.object({
             _id: z.string(),
             isPrivate: z.boolean().optional(),
             shortCode: z.string(),
-            loc: z.object({ p: z.coerce.number(), a: z.coerce.string(), x: z.coerce.number(), y: z.coerce.number() })
+            loc: schema_snap_loc,
         });
     type Snap = ZodInfer<typeof schema_snap>
     const schema_snapPage = z.object({
@@ -870,6 +877,7 @@ import { ZodInfer } from "./types";
     const storeSnapImage = async (shortCode: string, blob: Blob) => await db.put('snapshots-image', blob, shortCode);
     const getSnapImage = async (shortCode: string) => await db.get('snapshots-image', shortCode);
     const getSnap = async (index: number) => await (await fetch(`https://manyland.com/j/v/loc/${index}`, { credentials: "include", mode: "cors", headers: { "X-CSRF": csrfToken } })).json();
+    const api_getSnapFromCode = async (shortCode: string) => await api_getJSON(`https://manyland.com/j/v/cds/${shortCode}`);
 
     const scanSnaps = async (startIndex = 0) => {
         let index = startIndex;
@@ -927,6 +935,22 @@ import { ZodInfer } from "./types";
             status.textContent = "Downloading snaps... (" + i + ")"
             await downloadAndStoreSnap(shortCode)
         }
+    }
+    const saveSnapByShortcode = async (shortCode: string) => {
+        try {
+        const rawData = await api_getSnapFromCode(shortCode);
+        const data = schema_snap_loc.parse(rawData);
+
+        await storeSnapData({
+            _id: "5272e0f00000000000001919",
+            shortCode,
+            loc: data,
+            isPrivate: true,
+        });
+        } catch(e) {
+            console.warn(`Error saving snap ${shortCode}!`);
+        }
+
     }
     // #endregion snaps
 
@@ -1129,6 +1153,10 @@ import { ZodInfer } from "./types";
                 status.textContent = "Downloading snaps..."
             }
             await downloadAllStoredSnaps();
+
+            const extraSnaps: string[] = [];
+            for (const snap of extraSnaps) { await saveSnapByShortcode(snap) }
+
 
             if (btn_miftsEnabled.checked) {
                 status.textContent = "Archiving public mifts..."
