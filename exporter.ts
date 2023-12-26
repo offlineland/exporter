@@ -1,7 +1,7 @@
 import { ZodInfer } from "./types";
 
 (async () => {
-    const version = "7";
+    const version = "8";
 
 	if(window.location.protocol === "http:"){
 		if(confirm("Redirecting to secure context...")){
