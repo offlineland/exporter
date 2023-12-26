@@ -973,6 +973,7 @@ import { ZodInfer } from "./types";
 
         // #region zip_profile
         {
+            status.textContent = "Creating zip... (adding account data)";
             zip.file(`profile_own-id.json`, JSON.stringify(ourId, null, 2));
             if (initData.stn) {
                 zip.file(`profile_settings.json`, JSON.stringify(initData.stn, null, 2));
@@ -996,6 +997,7 @@ import { ZodInfer } from "./types";
 
         for (const shortCode of allSnaps) {
             log("adding snap", shortCode)
+            status.textContent = `Creating zip... (adding snap ${shortCode})`;
             const data = await getSnapData(shortCode);
             const imageBlob = await getSnapImage(shortCode);
 
@@ -1009,6 +1011,7 @@ import { ZodInfer } from "./types";
         }
 
         zip.file(`snapshots/filename_mapping.json`, JSON.stringify(snapFilenames, null, 2));
+        status.textContent = `Creating zip... (adding snapshots.csv)`;
         zip.file(`snapshots.csv`, csv_stringify_sync.stringify(snapCsvDataset));
         // #endregion zip_snaps
 
@@ -1020,6 +1023,7 @@ import { ZodInfer } from "./types";
         const csvDataset_mifts = [[ "date", "from", "text", "isPrivate", "fromId", "toId", "_id" ]]
         const allPublicMifts = await store_getAllMifts(false);
         for (const mift of allPublicMifts) {
+            status.textContent = `Creating zip... (adding mift ${mift._id})`;
             const filename = makeNameSafeForFile(`${makeDateSafeForFile(mift.ts)} - from ${mift.fromName} - ${mift.text.slice(0, 60)}`);
 
             zip.file(`mifts/public/${filename}.json`, JSON.stringify(mift, null, 2));
@@ -1029,6 +1033,7 @@ import { ZodInfer } from "./types";
         log("adding private mifts")
         const allPrivateMifts = await store_getAllMifts(true);
         for (const mift of allPrivateMifts) {
+            status.textContent = `Creating zip... (adding mift ${mift._id})`;
             const filename = makeNameSafeForFile(`${makeDateSafeForFile(mift.ts)} - from ${mift.fromName} - ${mift.text.slice(0, 60)}`);
 
             zip.file(`mifts/private/${filename}.json`, JSON.stringify(mift, null, 2));
@@ -1036,6 +1041,7 @@ import { ZodInfer } from "./types";
             csvDataset_mifts.push([ mift.ts, mift.fromName, mift.text, "true", mift.fromId, mift.toId, mift._id ]);
         }
 
+        status.textContent = `Creating zip... (adding mifts.csv)`;
         zip.file(`mifts.csv`, csv_stringify_sync.stringify(csvDataset_mifts));
         // #endregion zip_mifts
 
@@ -1047,7 +1053,9 @@ import { ZodInfer } from "./types";
             // NOTE: If a creation somehow had it's image and stats downloaded, but no def, it won't appear.
             //       This shouldn't happen, though, and I'm not sure how we'd recover from that anyway.
             const allKeys = await db.getAllKeys('creations-data-def') as string[];
-            for await (const id of allKeys) {
+            for (let i = 0; i < allKeys.length; i++) {
+                const id = allKeys[i];
+                status.textContent = `Creating zip... (adding creation ${i}/${allKeys.length})`;
                 const def = await store_getCreationDef(id);
                 const img = await store_getCreationImage(id);
 
@@ -1088,10 +1096,12 @@ import { ZodInfer } from "./types";
             }
 
             // NOTE: we only store CSV data for our own creations
+            status.textContent = `Creating zip... (adding my-creations.csv)`;
             zip.file(`my-creations.csv`, csv_stringify_sync.stringify(csvDataset));
         }
         // #endregion zip_creations
 
+        status.textContent = `Creating zip... (adding inventory data)`;
         zip.file(`inventory-collected.json`, JSON.stringify(await db.getAllKeys(`inventory-collections`), null, 2));
         zip.file(`inventory-created.json`, JSON.stringify(await db.getAllKeys(`inventory-creations`), null, 2));
 
@@ -1099,6 +1109,7 @@ import { ZodInfer } from "./types";
         // #region zip_arealist
         {
             log("storing area list...");
+            status.textContent = `Creating zip... (adding area list)`;
 
             const areaList = await api_getMyAreaList();
             const csvDataset = [[ "groupId", "id", "areaName", "name", "isSubarea", "isCreator", "isEditor", "totalVisitors", "lastVisit" ]]
@@ -1127,6 +1138,7 @@ import { ZodInfer } from "./types";
 
 
         log("generating file...")
+        status.textContent = `Creating zip... (generating file, this can take a while!)`;
         const zipBlob = await zip.generateAsync({type: "blob"})
         log("downloading file...")
         saveAs(zipBlob, "manyland-account-archive.zip");
