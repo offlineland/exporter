@@ -565,16 +565,16 @@ import { ZodInfer } from "./types";
             //}
 
             // get from props
-            if (def.props?.emitsId) await store_addToQueue(def.props.emitsId)
-            if (def.props?.motionId) await store_addToQueue(def.props.motionId)
-            if (def.props?.environmentId) await store_addToQueue(def.props.environmentId)
-            if (def.props?.getId) await store_addToQueue(def.props.getId)
-            if (def.props?.hasId) await store_addToQueue(def.props.hasId)
-            if (def.props?.holdableId) await store_addToQueue(def.props.holdableId)
-            if (def.props?.wearableId) await store_addToQueue(def.props.wearableId)
-            if (def.props?.thingRefs) {
-                if (Array.isArray(def.props.thingRefs)) {
-                    for (const [ id ] of def.props.thingRefs) {
+            if (def.prop?.emitsId) await store_addToQueue(def.prop.emitsId)
+            if (def.prop?.motionId) await store_addToQueue(def.prop.motionId)
+            if (def.prop?.environmentId) await store_addToQueue(def.prop.environmentId)
+            if (def.prop?.getId) await store_addToQueue(def.prop.getId)
+            if (def.prop?.hasId) await store_addToQueue(def.prop.hasId)
+            if (def.prop?.holdableId) await store_addToQueue(def.prop.holdableId)
+            if (def.prop?.wearableId) await store_addToQueue(def.prop.wearableId)
+            if (def.prop?.thingRefs) {
+                if (Array.isArray(def.prop.thingRefs)) {
+                    for (const [ id ] of def.prop.thingRefs) {
                         await store_addToQueue(id);
                     }
                 }
