@@ -1077,7 +1077,7 @@ import { ZodInfer } from "./types";
                     const painterData = await store_getCreationPainterData(id);
                     zip.file(`my-creations_painterdata/${id}.json`, JSON.stringify(painterData));
 
-                    csvDataset.push([ id, date, def.base, def.name, stats.timesPd, stats.timesCd ]);
+                    csvDataset.push([ id, date, def.base, def.name, stats?.timesPd, stats?.timesCd ]);
                 }
                 else {
                     zip.file(`other-creations/${filename}.png`, img);
