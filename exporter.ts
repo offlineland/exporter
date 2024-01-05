@@ -937,7 +937,7 @@ import { ZodInfer } from "./types";
         for (let i = 0; i < allSnaps.length; i++) {
             const shortCode = allSnaps[i]
             status.textContent = "Downloading snaps... (" + i + ")"
-            await downloadAndStoreSnap(shortCode)
+            await downloadAndStoreSnap(shortCode.toLowerCase());
         }
     }
     const saveSnapByShortcode = async (shortCode: string) => {
