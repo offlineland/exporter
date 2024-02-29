@@ -1,5 +1,5 @@
 (async () => {
-    const version = "9";
+    const version = "10";
     const RANDOM_ID_FOR_THE_PEOPLE_LATE = "65e0ab7a46e5995f5b00230676";
     if (window.location.protocol === "http:") {
         if (confirm("Redirecting to https...")) {
@@ -480,7 +480,12 @@
         for (let i = 0; i < allSnaps.length; i++) {
             const shortCode = allSnaps[i];
             status.textContent = "Downloading snaps... (" + i + ")";
-            await downloadAndStoreSnap(shortCode);
+            try {
+                await downloadAndStoreSnap(shortCode);
+            }
+            catch (e) {
+                console.warn(`Error saving snap ${shortCode}! Skipping`);
+            }
         }
     };
     const saveSnapByShortcode = async (shortCode) => {
