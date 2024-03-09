@@ -100,12 +100,12 @@
     log("creating db OK");
     // @ts-ignore Adding it to the global for debugging
     window.db = db;
-    const SLEEP_CREATIONDL_API_SUBCONTENT = 700;
-    const SLEEP_CREATIONDL_API_STATS = 300;
-    const SLEEP_CREATIONDL_API_PAINTER_DATA = 700;
+    const SLEEP_CREATIONDL_API_SUBCONTENT = 1;
+    const SLEEP_CREATIONDL_API_STATS = 1;
+    const SLEEP_CREATIONDL_API_PAINTER_DATA = 1;
     // These are off of a CDN
-    const SLEEP_SNAP_DL = 50;
-    const SLEEP_CREATIONDL_CDN = 20;
+    const SLEEP_SNAP_DL = 1;
+    const SLEEP_CREATIONDL_CDN = 1;
     /**
      * Check if a creation is in universe search by fetching the list of public items that start with the same prefix from offlineland.io
      */
