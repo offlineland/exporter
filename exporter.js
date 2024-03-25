@@ -481,7 +481,7 @@
             const shortCode = allSnaps[i];
             status.textContent = "Downloading snaps... (" + i + ")";
             try {
-                await downloadAndStoreSnap(shortCode);
+                await downloadAndStoreSnap(shortCode.toLowerCase());
             }
             catch (e) {
                 console.warn(`Error saving snap ${shortCode}! Skipping`);
